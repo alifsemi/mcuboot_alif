@@ -73,6 +73,44 @@ struct flash_area *boot_area_descs[] =
 };
 
 /**
+  \fn          static void mram_write_128bit(void *dst, const uint8_t *src)
+  \brief       Write 128bit data into MRAM
+  \param[in]   dst  Destination MRAM address
+  \param[in]   src  Source buffer address
+  \return      None
+*/
+static void mram_write_128bit(void *dst, const void *src)
+{
+    /* destination (MRAM address) must be always 16-byte aligned,
+     * source may or may not be aligned.*/
+
+    /* use temporary buffer for storing source data,
+     * in case source data is not 16-bytes aligned.*/
+    uint32_t temp_buf[4] = {0}; /* 128-bit.*/
+
+    /* check source address is aligned to 16-bytes? */
+    uint8_t *aligned_src = (uint8_t*) ((uint32_t) src & MRAM_ADDR_ALIGN_MASK);
+
+    /* is source data unaligned? */
+    if (src != aligned_src)
+    {
+        /* unaligned source data,
+         *  - copy source data first in temporary buffer
+         *  - then copy buffer to destination/MRAM.
+         */
+        memcpy(temp_buf, src, MRAM_WRITE_SIZE);
+
+        ((volatile uint64_t *) dst)[0] = ((volatile uint64_t *) temp_buf)[0];
+        ((volatile uint64_t *) dst)[1] = ((volatile uint64_t *) temp_buf)[1];
+    }
+    else
+    {
+        ((volatile uint64_t *) dst)[0] = ((volatile uint64_t *) src)[0];
+        ((volatile uint64_t *) dst)[1] = ((volatile uint64_t *) src)[1];
+    }
+}
+
+/**
   \fn          static struct flash_area *get_flash_area_from_id(uint8_t id)
   \brief       Retrieve the flash area from the flash map for the given id
   \param[in]   id ID of the flash area
@@ -159,15 +197,16 @@ int flash_area_write(const struct flash_area *fa, uint32_t off,
 {
     uint32_t addr = fa->fa_off + off;
     uint32_t i;
+    const uint8_t *data = src;
 
-    if (off % MRAM_WRITE_SIZE || len % MRAM_WRITE_SIZE)
+    if (addr % MRAM_WRITE_SIZE || len % MRAM_WRITE_SIZE)
     {
         return -1;
     }
 
     for (i = 0; i < len; i += MRAM_WRITE_SIZE)
     {
-        memcpy((void *) (addr + i), src, MRAM_WRITE_SIZE);
+        mram_write_128bit((void *) (addr + i), (data + i));
     }
 
     return 0;
@@ -186,13 +225,19 @@ int flash_area_erase(const struct flash_area *fa,
                      uint32_t off, uint32_t len)
 {
     uint32_t addr = fa->fa_off + off;
+    /* buffer to act as a source of 0s for mram 'erase' */
+    const uint32_t src[4] = {0};
+    uint32_t i;
 
-    if (off % MRAM_WRITE_SIZE || len % MRAM_WRITE_SIZE)
+    if (addr % MRAM_WRITE_SIZE || len % MRAM_WRITE_SIZE)
     {
         return -1;
     }
 
-    memset((void *) addr, MRAM_ERASE_VALUE, len);
+    for (i = 0; i < len; i += MRAM_WRITE_SIZE)
+    {
+        mram_write_128bit((void *) (addr + i), src);
+    }
 
     return 0;
 }
