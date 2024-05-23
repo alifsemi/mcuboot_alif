@@ -175,15 +175,6 @@ int flash_area_get_sectors(int fa_id, uint32_t *count,
                            struct flash_sector *sectors);
 
 /**
-  \fn          int flash_area_sector_from_off(uint32_t off, struct flash_sector *sector)
-  \brief       Retreive the flash sector a given offset belong to
-  \param[in]   off Address offset
-  \param[out]  sector Buffer for the sector information
-  \return      zero on success, negative in case of an error
-*/
-int flash_area_sector_from_off(uint32_t off, struct flash_sector *sector);
-
-/**
   \fn          int flash_area_get_sector(const struct flash_area *area, uint32_t off,
                     struct flash_sector *sector)
   \brief       Retreive the flash sector a given offset belong to
