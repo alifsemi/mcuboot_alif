@@ -21,34 +21,32 @@
 #define MCUBOOT_LOG_LEVEL MCUBOOT_LOG_LEVEL_DEBUG
 #endif
 
+#include <stdio.h>
+
 #if MCUBOOT_LOG_LEVEL >= MCUBOOT_LOG_LEVEL_ERROR
-#define MCUBOOT_LOG_ERR(_fmt, ...)                                      \
-    do {                                                                \
-    } while (0)
+#define MCUBOOT_LOG_ERR(fmt, ...) \
+     printf("ERR: " fmt "\n", ##__VA_ARGS__)
 #else
 #define MCUBOOT_LOG_ERR(...) IGNORE(__VA_ARGS__)
 #endif
 
 #if MCUBOOT_LOG_LEVEL >= MCUBOOT_LOG_LEVEL_WARNING
-#define MCUBOOT_LOG_WRN(_fmt, ...)                                      \
-    do {                                                                \
-    } while (0)
+#define MCUBOOT_LOG_WRN(fmt, ...) \
+     printf("WRN: " fmt "\n", ##__VA_ARGS__)
 #else
 #define MCUBOOT_LOG_WRN(...) IGNORE(__VA_ARGS__)
 #endif
 
 #if MCUBOOT_LOG_LEVEL >= MCUBOOT_LOG_LEVEL_INFO
-#define MCUBOOT_LOG_INF(_fmt, ...)                                      \
-    do {                                                                \
-    } while (0)
+#define MCUBOOT_LOG_INF(fmt, ...) \
+     printf("INF: " fmt "\n", ##__VA_ARGS__)
 #else
 #define MCUBOOT_LOG_INF(...) IGNORE(__VA_ARGS__)
 #endif
 
 #if MCUBOOT_LOG_LEVEL >= MCUBOOT_LOG_LEVEL_DEBUG
-#define MCUBOOT_LOG_DBG(_fmt, ...)                                      \
-    do {                                                                \
-    } while (0)
+#define MCUBOOT_LOG_DBG(fmt, ...) \
+     printf("DBG: " fmt "\n", ##__VA_ARGS__)
 #else
 #define MCUBOOT_LOG_DBG(...) IGNORE(__VA_ARGS__)
 #endif
