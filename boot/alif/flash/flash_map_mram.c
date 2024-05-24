@@ -34,7 +34,9 @@ static struct flash_area primary_1 =
 {
     .fa_id = FLASH_AREA_IMAGE_PRIMARY(0),
     .fa_device_id = FLASH_DEVICE_MRAM,
-    .fa_off = MRAM_BASE + BOOT_BOOTLOADER_SIZE,
+    .fa_off = MRAM_BASE +\
+                BOOTLOADER_START_ADDRESS +\
+                BOOT_BOOTLOADER_SIZE,
     .fa_size = BOOT_PRIMARY_1_SIZE
 };
 
@@ -43,6 +45,7 @@ static struct flash_area secondary_1 =
     .fa_id = FLASH_AREA_IMAGE_SECONDARY(0),
     .fa_device_id = FLASH_DEVICE_MRAM,
     .fa_off = MRAM_BASE +\
+                BOOTLOADER_START_ADDRESS +\
                 BOOT_BOOTLOADER_SIZE +\
                 BOOT_PRIMARY_1_SIZE,
     .fa_size = BOOT_SECONDARY_1_SIZE
@@ -54,6 +57,7 @@ static struct flash_area scratch =
     .fa_id = FLASH_AREA_IMAGE_SCRATCH,
     .fa_device_id = FLASH_DEVICE_MRAM,
     .fa_off = MRAM_BASE +\
+               BOOTLOADER_START_ADDRESS +\
                BOOT_BOOTLOADER_SIZE +\
                BOOT_PRIMARY_1_SIZE +\
                BOOT_SECONDARY_1_SIZE,
@@ -84,29 +88,26 @@ static void mram_write_128bit(void *dst, const void *src)
     /* destination (MRAM address) must be always 16-byte aligned,
      * source may or may not be aligned.*/
 
-    /* use temporary buffer for storing source data,
-     * in case source data is not 16-bytes aligned.*/
-    uint32_t temp_buf[4] = {0}; /* 128-bit.*/
-
-    /* check source address is aligned to 16-bytes? */
-    uint8_t *aligned_src = (uint8_t*) ((uint32_t) src & MRAM_ADDR_ALIGN_MASK);
-
-    /* is source data unaligned? */
-    if (src != aligned_src)
+    /* is source data unaligned for 64-bit access? */
+    if(((uint32_t)src & 0x7))
     {
+        /* use temporary buffer for storing source data,
+        * in case source data is not 8-bytes aligned.*/
+        uint64_t temp_buf[2];
+
         /* unaligned source data,
          *  - copy source data first in temporary buffer
          *  - then copy buffer to destination/MRAM.
          */
         memcpy(temp_buf, src, MRAM_WRITE_SIZE);
 
-        ((volatile uint64_t *) dst)[0] = ((volatile uint64_t *) temp_buf)[0];
-        ((volatile uint64_t *) dst)[1] = ((volatile uint64_t *) temp_buf)[1];
+        ((volatile uint64_t *)dst)[0] = temp_buf[0];
+        ((volatile uint64_t *)dst)[1] = temp_buf[1];
     }
     else
     {
-        ((volatile uint64_t *) dst)[0] = ((volatile uint64_t *) src)[0];
-        ((volatile uint64_t *) dst)[1] = ((volatile uint64_t *) src)[1];
+        ((volatile uint64_t *)dst)[0] = ((uint64_t *)src)[0];
+        ((volatile uint64_t *)dst)[1] = ((uint64_t *)src)[1];
     }
 }
 
@@ -226,7 +227,8 @@ int flash_area_erase(const struct flash_area *fa,
 {
     uint32_t addr = fa->fa_off + off;
     /* buffer to act as a source of 0s for mram 'erase' */
-    const uint32_t src[4] = {0};
+    uint64_t src[2];
+    memset(src, MRAM_ERASE_VALUE, 16);
     uint32_t i;
 
     if (addr % MRAM_WRITE_SIZE || len % MRAM_WRITE_SIZE)
