@@ -18,9 +18,9 @@
  */
 
 /* Uncomment for RSA signature support */
-/* #define MCUBOOT_SIGN_RSA */
+#define MCUBOOT_SIGN_RSA
 
-/* #define MCUBOOT_SIGN_RSA_LEN 2048 */
+#define MCUBOOT_SIGN_RSA_LEN 2048
 
 /* Uncomment for ECDSA signatures using curve P-256. */
 /* #define MCUBOOT_SIGN_EC256 */
@@ -116,7 +116,8 @@
  *
  *    MCUBOOT_LOG_ERR > MCUBOOT_LOG_WRN > MCUBOOT_LOG_INF > MCUBOOT_LOG_DBG
  */
-/* #define MCUBOOT_HAVE_LOGGING 1 */
+#define MCUBOOT_HAVE_LOGGING 1
+#define MCUBOOT_LOG_LEVEL MCUBOOT_LOG_LEVEL_DEBUG
 
 #define CONFIG_MCUBOOT 1
 
